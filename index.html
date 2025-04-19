@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Dashboard de Frete Completo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 p-6">
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6">Dashboard de Frete</h1>
+
+    <!-- Filtros -->
+    <div class="bg-white p-4 rounded-lg shadow mb-6">
+      <h2 class="text-2xl font-semibold mb-4">Filtros</h2>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+          <label class="block mb-1 font-medium">Modelo de Sofá</label>
+          <select id="filterModel" class="w-full border rounded p-2">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div>
+          <label class="block mb-1 font-medium">Região</label>
+          <select id="filterRegion" class="w-full border rounded p-2">
+            <option value="">Todas</option>
+          </select>
+        </div>
+        <div>
+          <label class="block mb-1 font-medium">Tipo de Caminhão</label>
+          <select id="filterTruck" class="w-full border rounded p-2">
+            <option value="1">90 m³</option>
+            <option value="1.1">92 m³</option>
+          </select>
+        </div>
+        <div class="flex items-end">
+          <button id="btnFilter" class="w-full bg-blue-600 text-white rounded p-2 hover:bg-blue-700 transition">
+            Aplicar Filtros
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabela de Resultados -->
+    <div class="overflow-x-auto bg-white rounded-lg shadow">
+      <table class="w-full table-auto divide-y divide-gray-200">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="px-4 py-2 text-left font-medium">Modelo</th>
+            <th class="px-4 py-2 text-left font-medium">Região</th>
+            <th class="px-4 py-2 text-left font-medium">Valor Original (R$)</th>
+            <th class="px-4 py-2 text-left font-medium">Perda 5% (R$)</th>
+            <th class="px-4 py-2 text-left font-medium">Caminhão</th>
+            <th class="px-4 py-2 text-left font-medium">Valor Final (R$)</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody" class="divide-y divide-gray-100">
+          <!-- Populado via JavaScript -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // 1. Dados JSON extraídos da planilha (todos os modelos na ordem original)
+    const freteData = {
+      "SOFA RETRATIL 3,50": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 26000.0
+      },
+      "SOFA RETRATIL 2.90": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 26000.0
+      },
+      "SOFA RETRATIL 2.50": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 26000.0
+      },
+      "SOFA RETRATIL 2.30": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 26000.0
+      },
+      "SOFA RETRATIL 2.10": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 26000.0
+      },
+      "SOFA RETRATIL 1.90": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 26000.0
+      },
+      "SOFA RETRATIL 1.70": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 26000.0
+      },
+      "SOFA RECANTO 2,00": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 24500.0
+      },
+      "SOFA DEPAS 2,00": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 24000.0
+      },
+      "SOFA MILAO 2,00": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 23500.0
+      },
+      "SOFA MILAO 2,40": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 25000.0
+      },
+      "SOFA MILLENIUM 2,00": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 23000.0
+      },
+      "SOFA MONTREAL 2,00": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 22000.0
+      },
+      "SOFA GAGNER 2,00": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 22500.0
+      },
+      "SOFA CHESTER 3 LUGARES": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 27000.0
+      },
+      "SOFA CHESTER 2 LUGARES": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 26500.0
+      },
+      "SOFA PARIS 3 LUGARES": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 28000.0
+      },
+      "SOFA PARIS 2 LUGARES": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 27500.0
+      },
+      "SOFA CAPITONÊ 3 LUGARES": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 29000.0
+      },
+      "SOFA CAPITONÊ 2 LUGARES": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 28500.0
+      },
+      "SOFA LUXOR 3 LUGARES": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 30000.0
+      },
+      "SOFA LUXOR 2 LUGARES": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 29500.0
+      },
+      "SOFA ELITE 3 LUGARES": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 30500.0
+      },
+      "SOFA ELITE 2 LUGARES": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 30000.0
+      },
+      "SOFA ONIX 3 LUGARES": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 31500.0
+      },
+      "SOFA ONIX 2 LUGARES": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 31000.0
+      },
+      "SOFA MAXI 3 LUGARES": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 32000.0
+      },
+      "SOFA MAXI 2 LUGARES": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 31500.0
+      },
+      "POLTRONA MONALISA 2 LUGARES": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 26000.0
+      },
+      "POLTRONA IPANEMA / RUBI / PEROLA / AGHATA / ATHENAS": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 26000.0
+      },
+      "POLTRONA CONFORTO RECLINÁVEL": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 26000.0
+      },
+      "SOFA ANTUÉRPIA 3 LUGARES": {
+        "MA-PI-BA-CE-RN-PB-PE-AL-SE / AM-RR-PA-TO-MT": 26000.0
+      }
+    };
+
+    // 2. Preencher filtros
+    function populateFilters(data) {
+      const mSel = document.getElementById('filterModel');
+      const rSel = document.getElementById('filterRegion');
+      Object.keys(data).forEach(m => mSel.append(new Option(m, m)));
+      new Set(Object.values(data).flatMap(r => Object.keys(r)))
+        .forEach(r => rSel.append(new Option(r, r)));
+    }
+
+    // 3. Renderizar tabela com filtros e cálculo
+    function renderTable(data) {
+      const model  = document.getElementById('filterModel').value;
+      const region = document.getElementById('filterRegion').value;
+      const mult   = parseFloat(document.getElementById('filterTruck').value);
+      const tbody  = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+      Object.entries(data).forEach(([m, regs]) => {
+        if (model && m !== model) return;
+        Object.entries(regs).forEach(([r, baseCost]) => {
+          if (region && r !== region) return;
+          const orig = baseCost * mult;
+          const loss = orig * 0.05;
+          const fin  = orig + loss;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="px-4 py-2">${m}</td>
+            <td class="px-4 py-2">${r}</td>
+            <td class="px-4 py-2">${orig.toFixed(2)}</td>
+            <td class="px-4 py-2">${loss.toFixed(2)}</td>
+            <td class="px-4 py-2">${mult===1?'90 m³':'92 m³'}</td>
+            <td class="px-4 py-2 text-blue-600 font-semibold">${fin.toFixed(2)}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+    }
+
+    // 4. Eventos
+    document.getElementById('btnFilter').addEventListener('click', () => renderTable(freteData));
+    window.addEventListener('DOMContentLoaded', () => {
+      populateFilters(freteData);
+      renderTable(freteData);
+    });
+  </script>
+</body>
+</html>
